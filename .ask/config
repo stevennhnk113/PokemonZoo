@@ -1,0 +1,35 @@
+{
+  "deploy_settings": {
+    "default": {
+      "skill_id": "amzn1.ask.skill.339bd0c5-ff86-40f1-a978-f3922b8d4dfc",
+      "was_cloned": true,
+      "resources": {
+        "manifest": {
+          "eTag": "e8bbf20d925cf7bfee5925f68a615b8a"
+        },
+        "lambda": [
+          {
+            "arn": "arn:aws:lambda:us-east-1:147881111193:function:PokemonZoo",
+            "awsRegion": "us-east-1",
+            "functionName": "arn:aws:lambda:us-east-1:147881111193:function:PokemonZoo",
+            "alexaUsage": [
+              "custom/default"
+            ],
+            "revisionId": "7931b3c7-0eb5-43e0-af9a-4fcaa15f94b8"
+          }
+        ]
+      },
+      "merge": {
+        "manifest": {
+          "apis": {
+            "custom": {
+              "endpoint": {
+                "uri": "arn:aws:lambda:us-east-1:147881111193:function:PokemonZoo"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
