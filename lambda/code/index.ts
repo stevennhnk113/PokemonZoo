@@ -3,6 +3,7 @@ import * as Alexa from 'ask-sdk';
 // Helper
 import { Handler } from "./Constant";
 import { Pokemon } from "./Class";
+import { ConfigBase } from 'aws-sdk/lib/config';
 
 var request = require('request-promise');
 
@@ -58,10 +59,14 @@ const GetPokemonIntentHandler = {
 	},
 	async handle(handlerInput: Alexa.HandlerInput) {
 		let speechText = '';
-		let pokemon = await handlerInput.attributesManager.getPersistentAttributes() as Pokemon;
+		let data = await handlerInput.attributesManager.getPersistentAttributes();
+		let pokemon = new Pokemon(data);
 		pokemon = await GetPokemon(pokemon);
 
-		speechText += "You will be " + pokemon.Name + " today";
+		handlerInput.attributesManager.setPersistentAttributes(pokemon.GetJson());
+		handlerInput.attributesManager.savePersistentAttributes();
+
+		speechText += "You will be " + pokemon.Name + " today!";
 
 		return handlerInput.responseBuilder
 			.speak(speechText)
@@ -71,6 +76,16 @@ const GetPokemonIntentHandler = {
 
 function GetPokemon(pokemon: Pokemon) : Promise<Pokemon> {
 	return new Promise((resolve, reject) => {
+		let currentTime = new Date();
+		currentTime.setHours(0, 0, 0, 0);
+		if(pokemon.Date.getTime() >= currentTime.getTime())
+		{
+			resolve(pokemon);
+			return;
+		}
+
+		currentTime.setHours(24);
+		pokemon.Date = new Date(currentTime);
 		let randomPokemonIndex = GetRandomPokemonIndex(1, 803);
 
 		request({
@@ -136,7 +151,6 @@ const YesIntentHandler = {
 		switch(sessionAttributes.YesHandler)
 		{
 			case Handler.GetPokemonIntentHandler:
-				//handlerInput.requestEnvelope.request.intent = 'GetPokemonIntentHandler';
 				return GetPokemonIntentHandler.handle(handlerInput);
 			default:
 				var speechText = "Sorry! We encounter a problem.";
@@ -210,7 +224,7 @@ const GoodByeIntentHandler = {
 // Lambda init
 var persistenceAdapterConfig = {
 	tableName: "PokemonZoo",
-	partitionKeyName: "userId",
+	partitionKeyName: "id",
 	createTable: true,
 	//attributesName: undefined,
 	//dynamoDBClient: undefined,

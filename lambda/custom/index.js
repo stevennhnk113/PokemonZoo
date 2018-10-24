@@ -97,18 +97,21 @@ var GetPokemonIntentHandler = {
     },
     handle: function (handlerInput) {
         return __awaiter(this, void 0, void 0, function () {
-            var speechText, pokemon;
+            var speechText, data, pokemon;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         speechText = '';
                         return [4 /*yield*/, handlerInput.attributesManager.getPersistentAttributes()];
                     case 1:
-                        pokemon = _a.sent();
+                        data = _a.sent();
+                        pokemon = new Class_1.Pokemon(data);
                         return [4 /*yield*/, GetPokemon(pokemon)];
                     case 2:
                         pokemon = _a.sent();
-                        speechText += "You will be " + pokemon.Name + " today";
+                        handlerInput.attributesManager.setPersistentAttributes(pokemon.GetJson());
+                        handlerInput.attributesManager.savePersistentAttributes();
+                        speechText += "You will be " + pokemon.Name + " today!";
                         return [2 /*return*/, handlerInput.responseBuilder
                                 .speak(speechText)
                                 .getResponse()];
@@ -119,6 +122,14 @@ var GetPokemonIntentHandler = {
 };
 function GetPokemon(pokemon) {
     return new Promise(function (resolve, reject) {
+        var currentTime = new Date();
+        currentTime.setHours(0, 0, 0, 0);
+        if (pokemon.Date.getTime() >= currentTime.getTime()) {
+            resolve(pokemon);
+            return;
+        }
+        currentTime.setHours(24);
+        pokemon.Date = new Date(currentTime);
         var randomPokemonIndex = GetRandomPokemonIndex(1, 803);
         request({
             "method": "GET",
@@ -175,7 +186,6 @@ var YesIntentHandler = {
         var sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         switch (sessionAttributes.YesHandler) {
             case Constant_1.Handler.GetPokemonIntentHandler:
-                //handlerInput.requestEnvelope.request.intent = 'GetPokemonIntentHandler';
                 return GetPokemonIntentHandler.handle(handlerInput);
             default:
                 var speechText = "Sorry! We encounter a problem.";
@@ -235,7 +245,7 @@ var GoodByeIntentHandler = {
 // Lambda init
 var persistenceAdapterConfig = {
     tableName: "PokemonZoo",
-    partitionKeyName: "userId",
+    partitionKeyName: "id",
     createTable: true,
 };
 var persistenceAdapter = new Alexa.DynamoDbPersistenceAdapter(persistenceAdapterConfig);
